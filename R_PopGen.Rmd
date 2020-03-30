@@ -3,22 +3,23 @@ title: "R Session Population Genetics"
 output: html_notebook
 ---
 Install the following packages.
+
 For the sequence data manipulation and missingness plotting:
 seqinr
 gplots
 RColorBrewer
 
+For the population structure visualisation in pophelper:
+Cairo
+ggplot2
+gridExtra
+gtable
+tidyr
+devtools
+
 For the population genetics statistics:
 adegenet
 pegas
-
-##Remove if we don't use pophelper:
-#Cairo
-#ggplot2
-#gridExtra
-#gtable
-#tidyr
-#devtools
 
 ```{r}
 #For sequence data manipulation and missingness plotting:
@@ -27,19 +28,23 @@ library(gplots)
 library(RColorBrewer)
 library(graphics)
 
+#For structure mapping:
+library(Cairo)
+library(ggplot2)
+library(gridExtra)
+library(gtable)
+library(tidyr)
+library(devtools)
+Sys.setenv("R_REMOTES_NO_ERRORS_FROM_WARNINGS"=TRUE)
+#install pophelper package from GitHub
+remotes::install_github('royfrancis/pophelper')
+#load library for use
+library(pophelper)
+
 #For LD, PCA etc.:
 library(adegenet)
 library(pegas)
 
-#For structure mapping:
-#library(Cairo)
-#library(ggplot2)
-#library(gridExtra)
-#library(gtable)
-#library(tidyr)
-#library(devtools)
-
-##HOW TO MAKE THIS RUN WITHOUT THE OUTPUT BELOW?
 ```
 
 FILE FORMATS
@@ -117,7 +122,6 @@ All_diff<-c(Diff_worry['1572_A','1572_B'], Diff_worry['1572_B','1572_C'],Diff_wo
   )
 mean(All_diff)
 
-
 ```
 
 Good, we can see that only a very small portion (<1%) of the differences between the replicates of individuals is due to an actually different nucleotide.
@@ -125,10 +129,7 @@ Good, we can see that only a very small portion (<1%) of the differences between
 Now I want to visualise this with a heatmap. ##THIS DOESN'T EXECUTE WELL IN MARKDOWN
 
 ```{r}
-##Make heat tables to compare between the influence of real mistakes vs missing data
-#Make a panel figure for both tables 
-par(mfrow = c(1,2), mai = c(.7, .7, .1, .1)) #mfrow = c(1,2) gives you two colums
-
+##Make "heat tables" to compare between the influence of real mistakes vs missing data
 #Adapt this code so the color breaks fit with your data
 my_palette <- colorRampPalette(c("green", "yellow", "red"))(n = 299)
 
@@ -139,21 +140,28 @@ col_breaks = c(seq(0,.3,length=100),                 # for green
 
 ###HELP! THIS ONLY WORKS OUTSIDE THE RMD!
 #Figure 1: the influence of missing data
-dim <- ncol(Out_Perc_no_worries)
-image(1:dim, 1:dim, Out_Perc_no_worries, axes = FALSE, xlab="", ylab="", col=my_palette, breaks=col_breaks)
-axis(1, 1:dim, colnames(Out_Perc_no_worries), cex.axis = 0.7, las=3)
-axis(2, 1:dim, colnames(Out_Perc_no_worries), cex.axis = 0.7, las=1)
-text(expand.grid(1:dim, 1:dim), sprintf("%0.2f", Out_Perc_no_worries), cex=0.54)
+dim1 <- ncol(Out_Perc_no_worries)
+dim2 <- ncol(Diff_worry)
 
-#Figure 2: the influence of 'real' differences between sequences
-dim <- ncol(Diff_worry)
-image(1:dim, 1:dim, Diff_worry, axes = FALSE, xlab="", ylab="", col=my_palette, breaks=col_breaks)
-axis(1, 1:dim, colnames(Diff_worry), cex.axis = 0.7, las=3)
-axis(2, 1:dim, colnames(Diff_worry), cex.axis = 0.7, las=1)
-text(expand.grid(1:dim, 1:dim), sprintf("%0.2f", Diff_worry), cex=0.54)
+image(1:dim, 1:dim1, Out_Perc_no_worries, axes = FALSE, xlab="", ylab="", col=my_palette, breaks=col_breaks)+
+  axis(1, 1:dim1, colnames(Out_Perc_no_worries), cex.axis = 0.7, las=3)+
+  axis(2, 1:dim1, colnames(Out_Perc_no_worries), cex.axis = 0.7, las=1)+
+  text(expand.grid(1:dim1, 1:dim1), sprintf("%0.2f", Out_Perc_no_worries), cex=0.54)
 
 ```
-  VCF
+Why do we observe the two square blocks in the table?
+
+Now we also want to see this figure for the "really concerning" differences between the sequences
+
+```{r}
+#Figure 2: the influence of 'real' differences between sequences
+image(1:dim2, 1:dim2, Diff_worry, axes = FALSE, xlab="", ylab="", col=my_palette, breaks=col_breaks)+
+  axis(1, 1:dim2, colnames(Diff_worry), cex.axis = 0.7, las=3)+
+  axis(2, 1:dim2, colnames(Diff_worry), cex.axis = 0.7, las=1)+
+  text(expand.grid(1:dim2, 1:dim2), sprintf("%0.2f", Diff_worry), cex=0.54)
+```
+
+VCF
     vcfR
     To read in and manipulate a vcf file, one can use the R package vcfR:
     https://cran.r-project.org/web/packages/vcfR/vignettes/intro_to_vcfR.html
@@ -166,7 +174,7 @@ text(expand.grid(1:dim, 1:dim), sprintf("%0.2f", Diff_worry), cex=0.54)
     Rsamtools
     To read in and manipulate a BAM/SAM file, one can use the R package Rsamtools:
     https://kasperdanielhansen.github.io/genbioconductor/html/Rsamtools.html
-
+    
 Data filtering 
   It is nice to be able to filter your data manually. This allows you to understand better what you are working with. Examples of SNPs that you might want to filter out are singletons. Or you might want to work with only the di-allelic SNPs in your dataset, because many softwares only utilise di-allelic SNPs. In my case, I wanted to see which SNPs were present as one variant in one of my species, and as another in another species. With these SNPs I would be able to analyse the hybrids between both species. In the next code, I filtered my data for such 'species specific' SNPs based on my assumed 'pure' populations.
 
@@ -265,25 +273,25 @@ STRUCTURE
   Visualisation with Pophelper ###THIS DOESN'T WORK ANYMORE!
   
 ```{r}
-#install packages and dependencies
-install.packages(c("ggplot2","gridExtra","gtable","label.switching","tidyr","devtools"),dependencies=T)
-# install pophelper package from GitHub
-devtools::install_github('royfrancis/pophelper')
-# load library for use
-library(pophelper)
+#Read in the data
+Struct_table<-read.table("Structure_31SNPs_qscores_nuclear.txt", header = TRUE)
+Struct_table_mtDNA<-read.table("Structure_31SNPs_qscores_mtDNA.txt", header = TRUE)
 
-Struct_table<-read.table("Structure_31SNPs_output_D.txt", header = TRUE)
-Struct_table_mtDNA<-read.table("Structure_31SNPs_output_D_mtDNA_2.txt", header = TRUE)
+#Make the data structure appropriate for PopHelper
 Q1<-list(structure_1=data.frame(Cluster1=c(Struct_table[,3]), Cluster2=c(Struct_table[,4])))
 Q2<-list(mtDNA=data.frame(Cluster1=c(Struct_table_mtDNA[,3]), Cluster2=c(Struct_table_mtDNA[,4])))
 
+#Make the population labels appropriate for PopHelper
 Pop_label<-Struct_table[,1, drop = FALSE]
 Pop_label$Pop <- as.character(Pop_label$Pop)
 nrow(Pop_label)
 
+#The final plot
 plotQ(qlist=c(Q2[1], Q1[1]), imgoutput='join', clustercol=c("blue", "red"), grplab=Pop_label, grplabsize = 1, showlegend=T, divtype= 1, legendlab=c("Bufo bufo","Bufo spinosus"), splab=c("mtDNA", "Structure"), linecol="white", pointtype=NA, grplabpos=1, imgtype="tiff")
 
 ```
+Look at the many options available for your population structure plotting in R with the PopHelper package here:
+http://www.royfrancis.com/pophelper/articles/index.html#plotq
 
 ##Population genetic analyses in Adegenet
 
@@ -343,12 +351,17 @@ s.class(pca1$li, pop(obj1), axesel=FALSE, cstar=1, cpoint=1, col=c(rep("black", 
                                                                    rep("red", 5), "blue", 
                                                                    "black", "black",
                                                                    rep("black", 12)))
-add.scatter.eig(pca1$eig[1:5],3,1,2, ratio=.3, posi="bottomright")
+```
 
+This looks good.
+
+What is the variance explained per axis?
+```{r}
 #Display variance explained
 summary(pca1)
 
 ```
+
 
   DAPC & Compoplot
   With adegenet:
