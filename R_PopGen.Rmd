@@ -1,24 +1,45 @@
 ---
 title: "R Session Population Genetics"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
 ---
-Install the following packages.
+Install the following packages.{>>I'm not sure this is needed Maybe just devide the loading of the libraries to several chunks and write it above each chunk<<}
 
-For the sequence data manipulation and missingness plotting:
+For the sequence data manipulation and missingness plotting:{>>Like this<<}
+```{r}
+library(seqinr)
+library(gplots)
+library(RColorBrewer)
+library(graphics)
+```
+
 seqinr
+
 gplots
+
 RColorBrewer
 
 For the population structure visualisation in pophelper:
+
 Cairo
+
 ggplot2
+
 gridExtra
+
 gtable
+
 tidyr
+
 devtools
 
 For the population genetics statistics:
+
 adegenet
+
 pegas
 
 ```{r}
@@ -35,6 +56,10 @@ library(gridExtra)
 library(gtable)
 library(tidyr)
 library(devtools)
+
+```
+{>>I think we can add the installation instruction for this package in the email we send out. This way we also will have time to deal with installation problems if there will be any<<}
+```{r}
 Sys.setenv("R_REMOTES_NO_ERRORS_FROM_WARNINGS"=TRUE)
 #install pophelper package from GitHub
 remotes::install_github('royfrancis/pophelper')
@@ -47,11 +72,12 @@ library(pegas)
 
 ```
 
-FILE FORMATS
-  FASTA
-    seqinr
-    With the package seqinr you can read in a fasta file.
-    Below you see an example where I used a aligned fasta file, checked whether the triplicated        samples (library in triplicate, treated as separate samples during assembly) had differences in     their sequence between replicates of individuals, or whether differences could be attritbuted      to missing data.
+# FILE FORMATS
+
+## FASTA (`seqinr`)
+
+With the package `seqinr` you can read in a fasta file.
+Below you see an example where I used a aligned fasta file, checked whether the triplicated       samples (library in triplicate, treated as separate samples during assembly) had differences in   their sequence between replicates of individuals, or whether differences could be attritbuted     to missing data.{>>This sentence is a bit complicated<<}
     
 ```{r}
 ##FASTA
@@ -138,12 +164,13 @@ col_breaks = c(seq(0,.3,length=100),                 # for green
                seq(0.3001,0.6,length=100),            # for yellow
                seq(.6001,.9,length=100))             # for red
 
-###HELP! THIS ONLY WORKS OUTSIDE THE RMD!
+###HELP! THIS ONLY WORKS OUTSIDE THE RMD! 
+#@@#@ There was a naming mistake. Is this doing now what you wanted it to do?
 #Figure 1: the influence of missing data
 dim1 <- ncol(Out_Perc_no_worries)
 dim2 <- ncol(Diff_worry)
 
-image(1:dim, 1:dim1, Out_Perc_no_worries, axes = FALSE, xlab="", ylab="", col=my_palette, breaks=col_breaks)+
+image(1:dim1, 1:dim1, Out_Perc_no_worries, axes = FALSE, xlab="", ylab="", col=my_palette, breaks=col_breaks)+
   axis(1, 1:dim1, colnames(Out_Perc_no_worries), cex.axis = 0.7, las=3)+
   axis(2, 1:dim1, colnames(Out_Perc_no_worries), cex.axis = 0.7, las=1)+
   text(expand.grid(1:dim1, 1:dim1), sprintf("%0.2f", Out_Perc_no_worries), cex=0.54)
@@ -161,29 +188,40 @@ image(1:dim2, 1:dim2, Diff_worry, axes = FALSE, xlab="", ylab="", col=my_palette
   text(expand.grid(1:dim2, 1:dim2), sprintf("%0.2f", Diff_worry), cex=0.54)
 ```
 
-VCF
-    vcfR
-    To read in and manipulate a vcf file, one can use the R package vcfR:
-    https://cran.r-project.org/web/packages/vcfR/vignettes/intro_to_vcfR.html
-    
-  BAM/SAM
-    scanBam
-    To import, count, index, filter, sort, and merge BAM files:
-    https://rdrr.io/bioc/Rsamtools/man/scanBam.html
-    
-    Rsamtools
-    To read in and manipulate a BAM/SAM file, one can use the R package Rsamtools:
-    https://kasperdanielhansen.github.io/genbioconductor/html/Rsamtools.html
-    
-Data filtering 
-  It is nice to be able to filter your data manually. This allows you to understand better what you are working with. Examples of SNPs that you might want to filter out are singletons. Or you might want to work with only the di-allelic SNPs in your dataset, because many softwares only utilise di-allelic SNPs. In my case, I wanted to see which SNPs were present as one variant in one of my species, and as another in another species. With these SNPs I would be able to analyse the hybrids between both species. In the next code, I filtered my data for such 'species specific' SNPs based on my assumed 'pure' populations.
+## VCF
 
-##NOTE: add a map at this point for checking the populations?
+### `vcfR`
+
+To read in and manipulate a vcf file, one can use the R package vcfR:
+https://cran.r-project.org/web/packages/vcfR/vignettes/intro_to_vcfR.html
+    
+    
+## BAM/SAM 
+
+### `scanBam`
+
+To import, count, index, filter, sort, and merge BAM files:
+https://rdrr.io/bioc/Rsamtools/man/scanBam.html
+    
+### `Rsamtools`
+
+To read in and manipulate a BAM/SAM file, one can use the R package Rsamtools:
+https://kasperdanielhansen.github.io/genbioconductor/html/Rsamtools.html
+    
+# Data filtering 
+
+It is nice to be able to filter your data manually. This allows you to understand better what you are working with. Keep in mind that with large SNP data this is probably not possible. 
+
+Examples of SNPs that you might want to filter out are singletons{>>Explaine here oraly what is singltone data in a few words<<}. Or you might want to work with only the di-allelic SNPs in your dataset, because many softwares only utilise di-allelic SNPs. In my case, I wanted to see which SNPs were present as one variant in one of my species, and as another in another species. With these SNPs I would be able to analyse the hybrids between both species. In the next code, I filtered my data for such 'species specific' SNPs based on my assumed 'pure' populations.
+
+##NOTE: add a map at this point for checking the populations?{>>Map of what?<<}
+
+{>>Just a general note, I myself prefer smaller chucks and put the comments into the regular text. I think it makes reading the html easier. Your choice<<}
 ```{r}
 ##To take out the population specific SNPs from a table
 #Read in my SNPs
 SNPtable<-as.data.frame(read.table("RAD_Bufo_SNPtable.txt", header=TRUE))
-
+knitr::kable(SNPtable[1:5,1:5])
 ## Remove columns where one species only has NA (possibly null aleles)
 #change the rownumbers for both populations, change the last number to be the maximum amount of NA present
 SNPtable_1<-SNPtable[,colSums(is.na(SNPtable[1:74,])) <= 54]
@@ -202,10 +240,11 @@ B_spino[,1]
 
 ## Compare the two tables
 #Prepare empty matrices (change rownumbers accordingly):
-Not_diagnostic_old<-matrix(,nrow=114, ncol=0)
-Diagnostic_old<-matrix(,nrow=114,ncol=0)
-Not_diagnostic<-matrix(,nrow=114, ncol=0)
-Diagnostic<-matrix(,nrow=114,ncol=0)
+#@#@ If you know the  dimantions of the matrix in advance it is better to set it before
+Not_diagnostic_old<-matrix(NA,nrow=114, ncol=0)
+Diagnostic_old<-matrix(NA,nrow=114,ncol=0)
+Not_diagnostic<-matrix(NA,nrow=114, ncol=0)
+Diagnostic<-matrix(NA,nrow=114,ncol=0)
 
 ## Now loop through all SNPs (columns) in this table
 for (i in 3:ncol(SNPtable_2)) {
@@ -236,20 +275,27 @@ Perc_diagnostic<-Tot_diagnostic/Tot_original*100
 #Then write the diagnostic snps to a file
 write.table(Diagnostic_old, file="RAD_Bufo_Diagnostic.txt", quote=FALSE, sep=" ", col.names=TRUE)
 ```
-Questions: 
-How many diagnostic markers do I have?
-How many non-diagnostic markers do I have?
-Does it add up to the total of markers in the input file?
-Where did the other markers go?
 
-Challenge: write a code that takes one SNP per RAD locus randomly
+# Questions: 
+
+- How many diagnostic markers do I have?
+
+- How many non-diagnostic markers do I have?
+
+- Does it add up to the total of markers in the input file?
+
+- Where did the other markers go?
+
+### Challenge: 
+
+write a code that takes one SNP per RAD locus randomly
 ```{r}
 #isolate rad names
 Uni_names<-unique(gsub("(rad[0-9]+)_.*", "\\1", names(Diagnostic_old)))
 
 #make new table
-Diagnostic_random<-matrix(,nrow=114, ncol=0)
-new<-matrix(,nrow=114,ncol=0)
+Diagnostic_random<-matrix(NA,nrow=114, ncol=0)
+new<-matrix(NA,nrow=114,ncol=0)
 
 #pick the colums with the names, take one random
 for (i in 1:length(Uni_names)){
@@ -262,15 +308,18 @@ write.table(Diagnostic_random, file="RAD_Bufo_Diagnostic_Random.txt", quote=FALS
 
 ```
 
-STRUCTURE
-  Run structure-like analysis in R (includes some nice mapping options): 
-  http://membres-timc.imag.fr/Olivier.Francois/tutoRstructure.pdf
-  And:
-  https://onlinelibrary-wiley-com.naturalis.idm.oclc.org/doi/pdf/10.1111/1755-0998.12559
-  Or:
-  https://github.com/Tom-Jenkins/admixture_pie_chart_map_tutorial/blob/master/pie_chart_admixture_map_tutorial.R
+# STRUCTURE
+
+Run structure-like analysis in R (includes some nice mapping options): 
+http://membres-timc.imag.fr/Olivier.Francois/tutoRstructure.pdf
+
+And:
+https://onlinelibrary-wiley-com.naturalis.idm.oclc.org/doi/pdf/10.1111/1755-0998.12559
+
+Or:
+https://github.com/Tom-Jenkins/admixture_pie_chart_map_tutorial/blob/master/pie_chart_admixture_map_tutorial.R
   
-  Visualisation with Pophelper ###THIS DOESN'T WORK ANYMORE!
+Visualisation with Pophelper ###THIS DOESN'T WORK ANYMORE!
   
 ```{r}
 #Read in the data
@@ -278,8 +327,10 @@ Struct_table<-read.table("Structure_31SNPs_qscores_nuclear.txt", header = TRUE)
 Struct_table_mtDNA<-read.table("Structure_31SNPs_qscores_mtDNA.txt", header = TRUE)
 
 #Make the data structure appropriate for PopHelper
-Q1<-list(structure_1=data.frame(Cluster1=c(Struct_table[,3]), Cluster2=c(Struct_table[,4])))
-Q2<-list(mtDNA=data.frame(Cluster1=c(Struct_table_mtDNA[,3]), Cluster2=c(Struct_table_mtDNA[,4])))
+Q1<-list(structure_1=data.frame(Cluster1=c(Struct_table[,3]),
+                                Cluster2=c(Struct_table[,4])))
+Q2<-list(mtDNA=data.frame(Cluster1=c(Struct_table_mtDNA[,3]),
+                          Cluster2=c(Struct_table_mtDNA[,4])))
 
 #Make the population labels appropriate for PopHelper
 Pop_label<-Struct_table[,1, drop = FALSE]
@@ -287,21 +338,26 @@ Pop_label$Pop <- as.character(Pop_label$Pop)
 nrow(Pop_label)
 
 #The final plot
-plotQ(qlist=c(Q2[1], Q1[1]), imgoutput='join', clustercol=c("blue", "red"), grplab=Pop_label, grplabsize = 1, showlegend=T, divtype= 1, legendlab=c("Bufo bufo","Bufo spinosus"), splab=c("mtDNA", "Structure"), linecol="white", pointtype=NA, grplabpos=1, imgtype="tiff")
+plotQ(qlist=c(Q2[1], Q1[1]), imgoutput='join', clustercol=c("blue", "red"), grplab=Pop_label, grplabsize = 1, showlegend=T, divtype= 1, legendlab=c("Bufo bufo","Bufo spinosus"), splab=c("mtDNA", "Structure"), linecol="white", pointtype=NA, grplabpos=1, imgtype="png")
 
 ```
+
+![](Joined2Files-20200401105207.png)
+
+
 Look at the many options available for your population structure plotting in R with the PopHelper package here:
 http://www.royfrancis.com/pophelper/articles/index.html#plotq
 
-##Population genetic analyses in Adegenet
+## Population genetic analyses in `adegenet`
 
-Adegenet
+### `adegenet`
 Read in the data & replace missing data with the mean frequency (there are other methods available).
 Other file formats are possible, but here we use a structure file.
 
 ```{r}
 ##Read in data
-obj1<-read.structure("RAD_Bufo_alldata.str")
+obj1<-read.structure("RAD_Bufo_alldata.str",n.ind = 373,n.loc = 4836,col.lab = 1,col.pop = 2,col.others = NA,row.marknames = 0,onerowperind = F)
+#@#@ I added the numbers in the code so that it would knit into html
 ##Now you need to fill out the following entries in the command line below
 #373, 4836, 1,2, <enter>, 0, n
 
@@ -312,19 +368,20 @@ levels(obj1$pop)
 NA_mean<-tab(obj1, NA.method="mean")
 ```
 
-LD
-
+## Linkage Disequilibrium (LD)
+ {>>Add some more explanation about what that means and what we are calculating here<<}
 ```{r}
 ##LD2 is for unphased data, LD is for phased data
 data(jaguar)
 LD2(jaguar, details = FALSE)
-LD2(obj1, details = FALSE)
+#@#@ This doesn't work for me. It seems like LD2 needs a loci matrix
+#LD2(obj1, details = FALSE)
 #doesn't seem to work for my own data:
 #obj_p1_11<-as.loci(obj1[obj1$pop=="T1_11",1:100])
 #LD(obj_p1_11)
 ```
 
-HW
+## HW {>>What are we calculating here?<<}
 ```{r}
 #Do the HW test without the Monte Carlo test
 Test_pop_T1_11<-hw.test(obj1[obj1$pop=="T1_11",1:100], B=0)
@@ -333,13 +390,17 @@ Test_pop_T1_11<-hw.test(obj1[obj1$pop=="T1_11",1:100], B=0)
 Test_pop_T1_11
 
 ```
-Questions:
-Why do we have rows with no output?
-Why do we have only 43 loci?
+
+### Questions:
+
+- Why do we have rows with no output?
+
+- Why do we have only 43 loci?
   
   
-  PCA
-  Perform a pca
+## PCA
+
+Perform a pca
 ```{r}
 #Do the pca analysis
 pca1<-dudi.pca(NA_mean, scannf=F, scale=F,nf=3)
