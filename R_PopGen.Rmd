@@ -25,7 +25,6 @@ library(ggplot2)
 library(gridExtra)
 library(gtable)
 library(tidyr)
-#library(devtools)
 
 Sys.setenv("R_REMOTES_NO_ERRORS_FROM_WARNINGS"=TRUE)
 #install pophelper package from GitHub
@@ -248,14 +247,16 @@ B_spino<-SNPtable_2[75:114,]
 
 One final check, are the first columns the right populations?
 ```{r}
-B_bufo[,1]
-B_spino[,1]
+knitr::kable(unique(B_bufo[,1]))
+```
+```{r}
+knitr::kable(unique(B_spino[,1]))
 ```
 
 Now I can start comparing the two tables
 
 Again I prepare empty matrices:
-#@#@ If you know the  dimantions of the matrix in advance it is better to set it before
+
 ```{r}
 Not_diagnostic_old<-matrix(NA,nrow=nrow(SNPtable_2), ncol=0)
 Diagnostic_old<-matrix(NA,nrow=nrow(SNPtable_2),ncol=0)
@@ -351,7 +352,6 @@ I love the possibilities with visualisation with Pophelper, but other packages a
 First, lets'read in some data. These are the q scores for the nuclear structure run, and frequencies for mtDNA.  
   
 ```{r}
-#Read in the data
 Struct_table<-read.table("Structure_31SNPs_qscores_nuclear.txt", header = TRUE)
 Struct_table_mtDNA<-read.table("Structure_31SNPs_qscores_mtDNA.txt", header = TRUE)
 ```
@@ -398,6 +398,7 @@ Read in the data & replace missing data with the mean frequency (there are other
 Other file formats are possible, but here we use a structure file.
 
 First, we read in the data:
+
 ```{r}
 obj1<-read.structure("RAD_Bufo_alldata.str",n.ind = 373,n.loc = 4836,col.lab = 1,col.pop = 2,col.others = NA,row.marknames = 0,onerowperind = F)
 ```
@@ -440,7 +441,8 @@ Test_pop_T1_11<-hw.test(obj1[obj1$pop=="T1_11",1:100], B=0)
 And we can check the output:
 
 ```{r}
-Test_pop_T1_11
+knitr::kable(Test_pop_T1_11[1:10,])
+
 ```
 
 ### Questions:
