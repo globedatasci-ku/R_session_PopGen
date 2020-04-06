@@ -9,7 +9,7 @@ editor_options:
 Install the following packages.
 
 For the sequence data manipulation and missingness plotting:
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(seqinr)
 library(gplots)
 library(RColorBrewer)
@@ -18,26 +18,22 @@ library(graphics)
 
 For the population structure visualisation in pophelper:
 
-```{r}
-#For structure mapping:
+```{r, message=FALSE, warning=FALSE}
 library(Cairo)
 library(ggplot2)
 library(gridExtra)
 library(gtable)
 library(tidyr)
-
-Sys.setenv("R_REMOTES_NO_ERRORS_FROM_WARNINGS"=TRUE)
-#install pophelper package from GitHub
-remotes::install_github('royfrancis/pophelper')
-#load library for use
 library(pophelper)
 ```
 
 For the population genetics statistics:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(adegenet)
 library(pegas)
+library(poppr)
+library(hierfstat)
 ```
 
 # FILE FORMATS
@@ -215,7 +211,7 @@ It is nice to be able to filter your data manually. This allows you to understan
 
 Examples of SNPs that you might want to filter out are singletons. Or you might want to work with only the di-allelic SNPs in your dataset, because many softwares only utilise di-allelic SNPs. In my case, I wanted to see which SNPs were present as one variant in one of my species, and as another in another species. With these SNPs I would be able to analyse the hybrids between both species. In the next code, I filtered my data for such 'species specific' SNPs based on my assumed 'pure' populations.
 
-##NOTE: add a map at this point for checking the populations?{>>Map of what?<<}
+![](Fig1_Maps.png)
 
 First I read in my SNPs
 
@@ -384,9 +380,8 @@ nrow(Pop_label)
 
 And the master-piece plot! It is only one line of code!! b(^-^)d
 
-```{r}
+```{r, message=FALSE, warning=FALSE, include=FALSE}
 plotQ(qlist=c(Q2[1], Q1[1]), imgoutput='join', clustercol=c("blue", "red"), grplab=Pop_label, grplabsize = 1, showlegend=T, divtype= 1, legendlab=c("Bufo bufo","Bufo spinosus"), splab=c("mtDNA", "Structure"), linecol="white", pointtype=NA, grplabpos=1, imgtype="png", outputfilename = "Structure_plot_bufo")
-
 ```
 
 ![](Structure_plot_bufo.png)
@@ -403,7 +398,7 @@ Other file formats are possible, but here we use a structure file.
 
 First, we read in the data:
 
-```{r}
+```{r, include=FALSE}
 obj1<-read.structure("RAD_Bufo_alldata.str",n.ind = 373,n.loc = 4836,col.lab = 1,col.pop = 2,col.others = NA,row.marknames = 0,onerowperind = F)
 ```
 
@@ -417,92 +412,6 @@ There is an option to replace missing data with the mean frequency:
 
 ```{r}
 NA_mean<-tab(obj1, NA.method="mean")
-```
-
-## Summaries
-
-You can get basic information on your data using summaries, which returns both a visible output and an invisible list:
-
-```{r}
-summary(obj1[obj1$pop=="T1_11",1:100])
-```
-
-
-## Hardy Weinberg equilibrium
-
-If you want to know whether your data is out of Hardy Weinberg equilibrium, one can do this with adegenet too:
-
-For example, we can do the Hardy Weinberg test without the Monte Carlo test, for population 11:
-
-```{r}
-Test_pop_T1_11<-hw.test(obj1[obj1$pop=="T1_11",1:100], B=0)
-```
-
-And we can check the output:
-
-```{r}
-knitr::kable(Test_pop_T1_11[1:10,])
-```
-
-### Questions:
-
-- Why do we have rows with no output?
-
-- Why do we have only 43 loci?
-
-
-## F-statistics
-
-You can also look for population structure with F-statistics. You can calculate Fst (pop/total), Fit (ind/total), and Fis (ind/pop) by locus.
-
-First we need to read in data with only two alleles.
-
-```{r}
-##Find file with only diploid data?
-```
-
-Then we can calcute the F statistics for a single population.
-
-```{r}
-Fst(as.loci(NA_mean[NA_mean$pop=="T1_11",c(7,11,18)]))
-
-data("nancycats")
-Fst(as.loci(nancycats))
-pairwise.fst(nancycats[1:50,])
-Fst(as.loci(NA_mean[1:10, 1:10]))
-
-
-obj2<-obj1[pop=c("T1_11", "T1_12"), c(1,11,18)]
-Fst(as.loci(obj2))
-
-pairwise.fst(obj2)
-
-```
-
-## Inbreeding
-
-```{r}
-temp <- inbreeding(obj1[obj1$pop=="T1_11",1:100], N=100)
-
-```
-
-It complaines a little bit, but the result should be fine.
-
-```{r}
-knitr::kable(temp$`1480_S104`[1:10])
-```
-
-We can then take the mean for each individual:
-
-```{r}
-Fbar <- sapply(temp, mean)
-
-```
-
-And plot it:
-
-```{r}
-hist(Fbar)
 ```
 
 ## Principal Component Analysis
@@ -531,6 +440,105 @@ What is the variance explained per axis?
 ```{r}
 summary(pca1)
 ```
+
+## Summaries
+
+You can get basic information on your data using summaries, which returns both a visible output and an invisible list. This is the summary for population 11 in transect 1.
+
+```{r}
+summary(obj1[obj1$pop=="T1_11",1:100])
+```
+
+
+## Hardy Weinberg equilibrium
+
+If you want to know whether your data is out of Hardy Weinberg equilibrium, one can do this with adegenet too:
+
+For example, we can do the Hardy Weinberg test without the Monte Carlo test, for population 11:
+
+```{r, warning=FALSE}
+Test_pop_T1_11<-hw.test(obj1[obj1@pop=="T1_11",1:100], B=0)
+```
+
+And we can check the output:
+
+```{r}
+knitr::kable(Test_pop_T1_11[1:10,])
+```
+
+### Questions:
+
+- Why do we have rows with no output?
+
+- Why do we have only 43 loci?
+
+
+## F-statistics
+
+You can also look for population structure with F-statistics. You can calculate Fst (), pop/totalFit (ind/total), and Fis (ind/pop) by locus.
+
+First lets' select only a couple of the populations that we know are diverse (hybrid), this will also make the F-statistics analysis run faster. A good package to know is poppr:
+
+```{r}
+obj2<-poppr::popsub(obj1, sublist = c("T1_11", "T1_12", "T1_13", "T1_14"))
+```
+
+Then we only want to use a couple of loci:
+
+```{r}
+obj3<-obj2[loc=c(1:10)]
+```
+
+And we need to convert this to a loci object:
+
+```{r}
+loc1<-as.loci(obj3)
+```
+
+Now our loc1 object has 10 loci for 4 populations:
+
+```{r}
+#Something dim(loc1)
+```
+
+And we are able to calculate the different types of F-statistics for each of our loci
+
+```{r}
+Fst(loc1, pop=loc1$population)
+```
+
+And we can caluclate the pairwise Fst for each population (needs a gene object again):
+
+```{r}
+pairwise.fst(obj3, pop=obj3$pop, res.type = "matrix")
+```
+
+## Inbreeding
+
+We can check for inbreeding, which is a real common problem in amphibian populations:
+
+```{r}
+temp <- inbreeding(obj3, N=10)
+```
+
+Then we can look for the results for the first individual in our dataset (1480_S104)
+
+```{r}
+knitr::kable(temp$`1480_S104`)
+```
+
+We can then take the mean for each individual:
+
+```{r}
+MeanFst <- sapply(temp, mean)
+```
+
+And plot it:
+
+```{r}
+hist(MeanFst)
+```
+
 
 Adegenet has many other options: 
 
