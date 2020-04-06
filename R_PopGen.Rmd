@@ -235,6 +235,9 @@ Then I check my dimensions
 
 ```{r}
 nrow(SNPtable_2)
+```
+
+```{r}
 ncol(SNPtable_2)
 ```
 
@@ -246,6 +249,7 @@ B_spino<-SNPtable_2[75:114,]
 ```
 
 One final check, are the first columns the right populations?
+
 ```{r}
 knitr::kable(unique(B_bufo[,1]))
 ```
@@ -255,7 +259,7 @@ knitr::kable(unique(B_spino[,1]))
 
 Now I can start comparing the two tables
 
-Again I prepare empty matrices:
+Again I prepare empty matrices, but I don't know how many SNPs of each type I'll get:
 
 ```{r}
 Not_diagnostic_old<-matrix(NA,nrow=nrow(SNPtable_2), ncol=0)
@@ -381,11 +385,11 @@ nrow(Pop_label)
 And the master-piece plot! It is only one line of code!! b(^-^)d
 
 ```{r}
-plotQ(qlist=c(Q2[1], Q1[1]), imgoutput='join', clustercol=c("blue", "red"), grplab=Pop_label, grplabsize = 1, showlegend=T, divtype= 1, legendlab=c("Bufo bufo","Bufo spinosus"), splab=c("mtDNA", "Structure"), linecol="white", pointtype=NA, grplabpos=1, imgtype="png")
+plotQ(qlist=c(Q2[1], Q1[1]), imgoutput='join', clustercol=c("blue", "red"), grplab=Pop_label, grplabsize = 1, showlegend=T, divtype= 1, legendlab=c("Bufo bufo","Bufo spinosus"), splab=c("mtDNA", "Structure"), linecol="white", pointtype=NA, grplabpos=1, imgtype="png", outputfilename = "Structure_plot_bufo")
 
 ```
 
-![](Joined2Files-20200401105207.png)
+![](Structure_plot_bufo.png)
 
 
 Look at the many options available for your population structure plotting in R with the PopHelper package here:
@@ -415,18 +419,14 @@ There is an option to replace missing data with the mean frequency:
 NA_mean<-tab(obj1, NA.method="mean")
 ```
 
-## Linkage Disequilibrium (LD)
- {>>Add some more explanation about what that means and what we are calculating here<<}
+## Summaries
+
+You can get basic information on your data using summaries, which returns both a visible output and an invisible list:
+
 ```{r}
-##LD2 is for unphased data, LD is for phased data
-data(jaguar)
-LD2(jaguar, details = FALSE)
-#@#@ This doesn't work for me. It seems like LD2 needs a loci matrix
-#LD2(obj1, details = FALSE)
-#doesn't seem to work for my own data:
-#obj_p1_11<-as.loci(obj1[obj1$pop=="T1_11",1:100])
-#LD(obj_p1_11)
+summary(obj1[obj1$pop=="T1_11",1:100])
 ```
+
 
 ## Hardy Weinberg equilibrium
 
@@ -442,7 +442,6 @@ And we can check the output:
 
 ```{r}
 knitr::kable(Test_pop_T1_11[1:10,])
-
 ```
 
 ### Questions:
@@ -450,8 +449,62 @@ knitr::kable(Test_pop_T1_11[1:10,])
 - Why do we have rows with no output?
 
 - Why do we have only 43 loci?
-  
-  
+
+
+## F-statistics
+
+You can also look for population structure with F-statistics. You can calculate Fst (pop/total), Fit (ind/total), and Fis (ind/pop) by locus.
+
+First we need to read in data with only two alleles.
+
+```{r}
+##Find file with only diploid data?
+```
+
+Then we can calcute the F statistics for a single population.
+
+```{r}
+Fst(as.loci(NA_mean[NA_mean$pop=="T1_11",c(7,11,18)]))
+
+data("nancycats")
+Fst(as.loci(nancycats))
+pairwise.fst(nancycats[1:50,])
+Fst(as.loci(NA_mean[1:10, 1:10]))
+
+
+obj2<-obj1[pop=c("T1_11", "T1_12"), c(1,11,18)]
+Fst(as.loci(obj2))
+
+pairwise.fst(obj2)
+
+```
+
+## Inbreeding
+
+```{r}
+temp <- inbreeding(obj1[obj1$pop=="T1_11",1:100], N=100)
+
+```
+
+It complaines a little bit, but the result should be fine.
+
+```{r}
+knitr::kable(temp$`1480_S104`[1:10])
+```
+
+We can then take the mean for each individual:
+
+```{r}
+Fbar <- sapply(temp, mean)
+
+```
+
+And plot it:
+
+```{r}
+hist(Fbar)
+```
+
 ## Principal Component Analysis
 
 We can also perform a PCA with adegenet:
