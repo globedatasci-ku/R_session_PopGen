@@ -1,0 +1,93 @@
+---
+title: "R_PopGen_answers"
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
+---
+# FILE FORMATS
+
+# FASTA (`seqinr`)
+
+- Why do we observe the two square blocks in the table?
+
+These square blocks are the two species that we have replicates for, and they show up because the replicates of individuals within the same species are more similar to each other than to the replicates of the other species.
+
+# Data filtering 
+
+```{r, eval=FALSE, include=FALSE}
+Tot_original<-ncol(SNPtable)-2 #The number of markers in the total dataset.
+#The first two colums are the sample and population, so they have to be substracted.
+Tot_original_B_bufo<-ncol(B_bufo)-2 #The number of markers present for B bufo.
+Tot_original_B_spino<-ncol(B_spino)-2 #The number of markers present for B spinosus.
+Tot_not_diagnostic<-ncol(Not_diagnostic_old) #The number of markers which are not diagnostic
+Tot_diagnostic<-ncol(Diagnostic_old) #The number of markers which are diagnostic
+Tot_not_diagnostic+Tot_diagnostic #This has to add up to the total of markers that were still in the dataset after subsetting for missingness.
+Perc_diagnostic<-Tot_diagnostic/Tot_original*100 #The percentage of diagnostic markers compared to the original dataset.
+```
+
+# Questions 
+
+- How many diagnostic markers do I have? 
+
+75
+
+- How many non-diagnostic markers do I have? 
+
+506
+
+- Does it add up to the total of markers in the input file? 
+
+No
+
+- Where did the other markers go? 
+
+The other markers had too much missing data, which would suggest they are null alleles, and they were excluded in the first lines of the code.
+
+# Challenge 
+
+write a code that takes one SNP per RAD locus randomly
+```{r, eval=FALSE, include=FALSE}
+#isolate rad names
+Uni_names<-unique(gsub("(rad[0-9]+)_.*", "\\1", names(Diagnostic_old)))
+
+#make new table
+Diagnostic_random<-matrix(NA,nrow=114, ncol=0)
+new<-matrix(NA,nrow=114,ncol=0)
+
+#pick the colums with the names, take one random
+for (i in 1:length(Uni_names)){
+  selection<-Diagnostic_old[,c(colnames(Diagnostic_old)[grep(Uni_names[i],colnames(Diagnostic_old))]), drop=FALSE]
+  new<-selection[,sample(ncol(selection), 1), drop=FALSE]
+  Diagnostic_random_new<-cbind(Diagnostic_random,new)
+  Diagnostic_random<-Diagnostic_random_new
+  }
+write.table(Diagnostic_random, file="RAD_Bufo_Diagnostic_Random.txt", quote=FALSE, sep=" ", col.names=TRUE)
+```
+
+# Principal Component Analysis
+
+- What is the variance explained per axis?
+
+Projected inertia (%):
+    Ax1     Ax2     Ax3     Ax4     Ax5 
+ 26.841   2.779   1.302   1.166   1.043
+
+# Hardy Weinberg equilibrium
+
+# Questions:
+
+- Why do we have rows with no output?
+
+Because we have too much missing data:
+
+```{r, eval=FALSE, include=FALSE}
+knitr::kable(obj1$tab[1:10, 1:3])
+```
+
+- Why do we have only 43 loci?
+
+We had selected for the first 100 SNPs, but those contain multiple SNPs per marker. Since Hardy Weinberg is calculated per marker, and not per SNP, we only get 43 loci. See also the header of the table above; L0001 has 3 SNPs (L0001.02, L0001.00, L0001.01).
+
+##THE END

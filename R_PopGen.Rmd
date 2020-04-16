@@ -9,6 +9,7 @@ editor_options:
 Install the following packages.
 
 For the sequence data manipulation and missingness plotting:
+
 ```{r, message=FALSE, warning=FALSE}
 library(seqinr)
 library(gplots)
@@ -49,16 +50,16 @@ First we read in the data:
 original<-read.fasta("RAD_Bufo_replicated_individuals.fasta", as.string=TRUE, set.attributes = FALSE)
 ```
 
-Now I'm making a for loop to look at differences caused by missing data (- and n), or by alternative genotype calling (c, t, g, a or IUPAC codes)1
+Now I am making a for loop to look at differences caused by missing data (- and n), or by alternative genotype calling (c, t, g, a or IUPAC codes).
 
-First I make empty matrices to fill during the for loop
+First I make empty matrices to fill during the for loop.
 
 ```{r}
 Out_Perc_diff<-matrix(nrow=length(original), ncol=0)
 Out_Perc_no_worries<-matrix(nrow=length(original), ncol=0)
 ```
 
-Then I loop trough the fasta  file
+Then I loop trough the fasta file.
 
 ```{r}
 for (i in 1:length(original)){
@@ -117,7 +118,7 @@ Then I calculate what we came for: the actual number of 'wrongly' called SNPs!
 Diff_worry<-Out_Perc_diff-Out_Perc_no_worries
 ```
 
-I order them in an order that I prefer:
+I order them in an order that I prefer, as I want to use this for visualisation.
 
 ```{r}
 All_diff<-c(Diff_worry['1572_A','1572_B'], Diff_worry['1572_B','1572_C'],Diff_worry['1572_A','1572_C'],
@@ -139,7 +140,7 @@ Good, we can see that only a very small portion (<1%) of the differences between
 
 Now I want to visualise this with "heat tables" to compare between the influence of real mistakes vs missing data.
 
-First, I made a custom palette to colour my "heat table"
+First, I made a custom palette to colour my "heat table".
 
 ```{r}
 my_palette <- colorRampPalette(c("green", "yellow", "red"))(n = 299)
@@ -154,14 +155,14 @@ col_breaks = c(seq(0,.3,length=100),                 # for green
 ```
 
 And I make Figure 1: to only see the influence of missing data.
-First I need to set the dimensions of the "image" I'm creating
+First I need to set the dimensions of the "image" I am creating.
 
 ```{r}
 dim1 <- ncol(Out_Perc_no_worries)
 dim2 <- ncol(Diff_worry)
 ```
 
-Then I make the actual image, give it axes, and fill it with the numbers I calculated above
+Then I make the actual image, give it axes, and fill it with the numbers I calculated above.
 
 ```{r}
 image(1:dim1, 1:dim1, Out_Perc_no_worries, axes = FALSE, xlab="", ylab="", col=my_palette, breaks=col_breaks)+
@@ -170,9 +171,11 @@ image(1:dim1, 1:dim1, Out_Perc_no_worries, axes = FALSE, xlab="", ylab="", col=m
   text(expand.grid(1:dim1, 1:dim1), sprintf("%0.2f", Out_Perc_no_worries), cex=0.54)
 ```
 
-Why do we observe the two square blocks in the table?
+# Question
 
-Now we also want to see this figure for the "really concerning" differences between the sequences
+- Why do we observe the two square blocks in the table?
+
+Now we also want to see this figure for the "really concerning" differences between the sequences.
 
 ```{r}
 image(1:dim2, 1:dim2, Diff_worry, axes = FALSE, xlab="", ylab="", col=my_palette, breaks=col_breaks)+
@@ -207,27 +210,28 @@ https://kasperdanielhansen.github.io/genbioconductor/html/Rsamtools.html
     
 # Data filtering 
 
-It is nice to be able to filter your data manually. This allows you to understand better what you are working with. Keep in mind that with large SNP data this is probably not possible. We here will only discuss what to do with smaller datasets. For larger datasets we'll probably set up another session!
+It is nice to be able to filter your data manually. This allows you to understand better what you are working with. Keep in mind that with large SNP data this is probably not possible. We here will only discuss what to do with smaller datasets. For larger datasets we may set up another session!
 
 Examples of SNPs that you might want to filter out are singletons. Or you might want to work with only the di-allelic SNPs in your dataset, because many softwares only utilise di-allelic SNPs. In my case, I wanted to see which SNPs were present as one variant in one of my species, and as another in another species. With these SNPs I would be able to analyse the hybrids between both species. In the next code, I filtered my data for such 'species specific' SNPs based on my assumed 'pure' populations.
 
 ![](Fig1_Maps.png)
 
-First I read in my SNPs
+
+First I read in my SNPs.
 
 ```{r}
 SNPtable<-as.data.frame(read.table("RAD_Bufo_SNPtable.txt", header=TRUE))
 knitr::kable(SNPtable[1:5,1:5])
 ```
 
-Then I remove columns where one species only has NA (possibly null aleles). I used the maximum amount of individuals with "NA" by using "<=54" and "<=30"
+Then I remove columns where one species only has NA (possibly null aleles). I used the maximum amount of individuals with "NA" by using "<=54" and "<=30".
 
 ```{r}
 SNPtable_1<-SNPtable[,colSums(is.na(SNPtable[1:74,])) <= 54]
 SNPtable_2<-SNPtable_1[,colSums(is.na(SNPtable_1[75:114,])) <= 30]
 ```
 
-Then I check my dimensions
+Then I check my dimensions.
 
 ```{r}
 nrow(SNPtable_2)
@@ -237,7 +241,7 @@ nrow(SNPtable_2)
 ncol(SNPtable_2)
 ```
 
-And I split the table up in two tables for each species that I have: B_bufo and B_spino
+And I split the table up in two tables for each species that I have: B_bufo and B_spino.
 
 ```{r}
 B_bufo<-SNPtable_2[1:74,]
@@ -255,7 +259,7 @@ knitr::kable(unique(B_spino[,1]))
 
 Now I can start comparing the two tables
 
-Again I prepare empty matrices, but I don't know how many SNPs of each type I'll get:
+Again I prepare empty matrices, but I do not know how many SNPs of each type I will get.
 
 ```{r}
 Not_diagnostic_old<-matrix(NA,nrow=nrow(SNPtable_2), ncol=0)
@@ -296,17 +300,15 @@ Tot_not_diagnostic+Tot_diagnostic
 Perc_diagnostic<-Tot_diagnostic/Tot_original*100
 ```
 
-Question: what do the different percentages calculate?
-
-And finally I can write the diagnostic snps to a file:
+And finally I can write the diagnostic snps to a file.
 
 ```{r}
 write.table(Diagnostic_old, file="RAD_Bufo_Diagnostic.txt", quote=FALSE, sep=" ", col.names=TRUE)
 ```
 
-# Questions: 
+# Questions
 
-- How many diagnostic markers do I have?
+- How many diagnostic markers do I have? 
 
 - How many non-diagnostic markers do I have?
 
@@ -314,42 +316,21 @@ write.table(Diagnostic_old, file="RAD_Bufo_Diagnostic.txt", quote=FALSE, sep=" "
 
 - Where did the other markers go?
 
-### Challenge: 
+# Challenge
 
-write a code that takes one SNP per RAD locus randomly
-```{r}
-#isolate rad names
-Uni_names<-unique(gsub("(rad[0-9]+)_.*", "\\1", names(Diagnostic_old)))
+Write a code that takes one SNP per RAD locus randomly.
 
-#make new table
-Diagnostic_random<-matrix(NA,nrow=114, ncol=0)
-new<-matrix(NA,nrow=114,ncol=0)
-
-#pick the colums with the names, take one random
-for (i in 1:length(Uni_names)){
-  selection<-Diagnostic_old[,c(colnames(Diagnostic_old)[grep(Uni_names[i],colnames(Diagnostic_old))]), drop=FALSE]
-  new<-selection[,sample(ncol(selection), 1), drop=FALSE]
-  Diagnostic_random_new<-cbind(Diagnostic_random,new)
-  Diagnostic_random<-Diagnostic_random_new
-  }
-write.table(Diagnostic_random, file="RAD_Bufo_Diagnostic_Random.txt", quote=FALSE, sep=" ", col.names=TRUE)
-
-```
-
-# STRUCTURE
+## Structure
 
 You can run structure-like analysis in R (includes some nice mapping options): 
 http://membres-timc.imag.fr/Olivier.Francois/tutoRstructure.pdf
-
-And:
-https://onlinelibrary-wiley-com.naturalis.idm.oclc.org/doi/pdf/10.1111/1755-0998.12559
 
 Or:
 https://github.com/Tom-Jenkins/admixture_pie_chart_map_tutorial/blob/master/pie_chart_admixture_map_tutorial.R
   
 I love the possibilities with visualisation with Pophelper, but other packages are available.
   
-First, lets'read in some data. These are the q scores for the nuclear structure run, and frequencies for mtDNA.  
+First, read in some data. These are the q scores for the nuclear structure run, and frequencies for mtDNA.  
   
 ```{r}
 Struct_table<-read.table("Structure_31SNPs_qscores_nuclear.txt", header = TRUE)
@@ -365,14 +346,14 @@ Q2<-list(mtDNA=data.frame(Cluster1=c(Struct_table_mtDNA[,3]),
                           Cluster2=c(Struct_table_mtDNA[,4])))
 ```
 
-Then I make the population labels appropriate for PopHelper
+Then I make the population labels appropriate for PopHelper.
 
 ```{r}
 Pop_label<-Struct_table[,1, drop = FALSE]
 Pop_label$Pop <- as.character(Pop_label$Pop)
 ```
 
-And I check whether this now includes all my populations I want to visualise:
+And I check whether this now includes all my populations I want to visualise.
 
 ```{r}
 nrow(Pop_label)
@@ -396,19 +377,19 @@ http://www.royfrancis.com/pophelper/articles/index.html#plotq
 Read in the data & replace missing data with the mean frequency (there are other methods available).
 Other file formats are possible, but here we use a structure file.
 
-First, we read in the data:
+First, we read in the data.
 
 ```{r, include=FALSE}
 obj1<-read.structure("RAD_Bufo_alldata.str",n.ind = 373,n.loc = 4836,col.lab = 1,col.pop = 2,col.others = NA,row.marknames = 0,onerowperind = F)
 ```
 
-And I check the populations in this new "obj1" to see if I have all my data now:
+And I check the populations in this new "obj1" to see if I have all my data now.
 
 ```{r}
 levels(obj1$pop)
 ```
 
-There is an option to replace missing data with the mean frequency:
+There is an option to replace missing data with the mean frequency.
 
 ```{r}
 NA_mean<-tab(obj1, NA.method="mean")
@@ -416,13 +397,13 @@ NA_mean<-tab(obj1, NA.method="mean")
 
 ## Principal Component Analysis
 
-We can also perform a PCA with adegenet:
+We can perform a PCA with adegenet.
 
 ```{r}
 pca1<-dudi.pca(NA_mean, scannf=F, scale=F,nf=3)
 ```
 
-And we make a nice plot:
+And we make a nice plot.
 
 ```{r}
 s.class(pca1$li, pop(obj1), axesel=FALSE, cstar=1, cpoint=1, col=c(rep("black", 7),
@@ -435,11 +416,15 @@ s.class(pca1$li, pop(obj1), axesel=FALSE, cstar=1, cpoint=1, col=c(rep("black", 
 
 This looks good.
 
-What is the variance explained per axis?
+We can also ask for summary of this PCA.
 
 ```{r}
 summary(pca1)
 ```
+
+# Question
+
+- What is the variance explained per axis?
 
 ## Summaries
 
@@ -449,24 +434,23 @@ You can get basic information on your data using summaries, which returns both a
 summary(obj1[obj1$pop=="T1_11",1:100])
 ```
 
-
 ## Hardy Weinberg equilibrium
 
-If you want to know whether your data is out of Hardy Weinberg equilibrium, one can do this with adegenet too:
+You can check whether your data is out of Hardy Weinberg equilibrium with adegenet, too.
 
-For example, we can do the Hardy Weinberg test without the Monte Carlo test, for population 11:
+For example, we can do the Hardy Weinberg test without the Monte Carlo test, for population 11.
 
 ```{r, warning=FALSE}
 Test_pop_T1_11<-hw.test(obj1[obj1@pop=="T1_11",1:100], B=0)
 ```
 
-And we can check the output:
+And we can check the output.
 
 ```{r}
 knitr::kable(Test_pop_T1_11[1:10,])
 ```
 
-### Questions:
+# Questions
 
 - Why do we have rows with no output?
 
@@ -477,28 +461,32 @@ knitr::kable(Test_pop_T1_11[1:10,])
 
 You can also look for population structure with F-statistics. You can calculate Fst (), pop/totalFit (ind/total), and Fis (ind/pop) by locus.
 
-First lets' select only a couple of the populations that we know are diverse (hybrid), this will also make the F-statistics analysis run faster. A good package to know is poppr:
+First select only a couple of the populations that we know are diverse (hybrid), this will also make the F-statistics analysis run faster. A good package to know is poppr.
 
 ```{r}
 obj2<-poppr::popsub(obj1, sublist = c("T1_11", "T1_12", "T1_13", "T1_14"))
 ```
 
-Then we only want to use a couple of loci:
+Then we only want to use a couple of loci.
 
 ```{r}
 obj3<-obj2[loc=c(1:10)]
 ```
 
-And we need to convert this to a loci object:
+And we need to convert this to a loci object.
 
 ```{r}
 loc1<-as.loci(obj3)
 ```
 
-Now our loc1 object has 10 loci for 4 populations:
+Now our loc1 object has 10 loci for 4 populations.
 
 ```{r}
-#Something dim(loc1)
+length(loc1)
+```
+
+```{r}
+length(unique(loc1$population))
 ```
 
 And we are able to calculate the different types of F-statistics for each of our loci
@@ -521,19 +509,19 @@ We can check for inbreeding, which is a real common problem in amphibian populat
 temp <- inbreeding(obj3, N=10)
 ```
 
-Then we can look for the results for the first individual in our dataset (1480_S104)
+Then we can look for the results for the first individual in our dataset (1480_S104).
 
 ```{r}
 knitr::kable(temp$`1480_S104`)
 ```
 
-We can then take the mean for each individual:
+We can then take the mean for each individual.
 
 ```{r}
 MeanFst <- sapply(temp, mean)
 ```
 
-And plot it:
+And plot it.
 
 ```{r}
 hist(MeanFst)
@@ -546,4 +534,4 @@ Adegenet has many other options:
   With adegenet:
   http://adegenet.r-forge.r-project.org/files/tutorial-dapc.pdf
 
-## THE END HAPPY CODING!!
+## THE END ~ HAPPY CODING!!
